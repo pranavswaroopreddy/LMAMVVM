@@ -5,19 +5,18 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
-
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
-
 import com.example.lmamvvm.databinding.ActivityMainBinding;
 import com.example.lmamvvm.model.Category;
 import com.example.lmamvvm.model.Course;
 import com.example.lmamvvm.viewmodel.MainActivityViewModel;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +26,11 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding activityMainBinding;
     private MainActivityClickHandlers handlers;
     private Category selectedCategory;
+
+    //Recyclerview
+    private RecyclerView courseRecyclerView;
+    private CourseAdapter courseAdapter;
+    private ArrayList<Course> coursesList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +81,27 @@ public class MainActivity extends AppCompatActivity {
         activityMainBinding.setSpinnerAdapter(categoryArrayAdapter);
     }
 
+    public void LoadCoursesArrayList(int categotyId){
+        mainActivityViewModel.getCoursesOfSelectedCategory(categotyId).observe(this, new Observer<List<Course>>() {
+            @Override
+            public void onChanged(List<Course> courses) {
+                coursesList = (ArrayList<Course>) courses;
+                LoadRecyclerView();
+            }
+        });
+    }
+
+    private void LoadRecyclerView() {
+        courseRecyclerView = activityMainBinding.secondaryLayout.recyclerView;
+        courseRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        courseRecyclerView.setHasFixedSize(true);
+
+        courseAdapter = new CourseAdapter();
+        courseRecyclerView.setAdapter(courseAdapter);
+        courseAdapter.setCourses(coursesList);
+
+    }
+
     public class MainActivityClickHandlers {
         public void onFABClicked(View view) {
             Toast.makeText(getApplicationContext(), "fab clicked", Toast.LENGTH_SHORT).show();
@@ -89,6 +114,8 @@ public class MainActivity extends AppCompatActivity {
                     "\n name is " + selectedCategory.getCategoryName();
 
             Toast.makeText(parent.getContext()," "+message,Toast.LENGTH_SHORT).show();
+
+            LoadCoursesArrayList(selectedCategory.getId());
         }
     }
 }
